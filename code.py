@@ -17,6 +17,16 @@ print(env.observation_space.high)
 #this will return min in each dimension
 print(env.observation_space.low)
 
+# epsilon is for randomness as without it if program find success way then it will concentrate on it only amd
+# will not find other gud way 
+epsilon = 0.5
+
+
+START_EPSILON_DECAYING = 1
+END_EPSILON_DECAYING = EPISODES // 2
+epsilon_decay_value = epsilon/(END_EPSILON_DECAYING - START_EPSILON_DECAYING)
+
+
 # we will try to construct matrix to accamodate many values q-table
 DISCRETE_OS_SIZE = [20] * len(env.observation_space.high)
 
@@ -48,6 +58,12 @@ for episode in range(EPISODES):
     discrete_state = get_discrete_state(env.reset())
     done = False
     while not done:
+
+        if np.random.random() > epsilon:
+            action = np.argmax(q_table[discrete_state])
+        else:
+            action = np.random.randint(0,env.action_space.n)
+
         action = np.argmax(q_table[discrete_state])
         new_state,reward,done,_ = env.step(action)
         new_discrete_state = get_discrete_state(new_state)
@@ -62,6 +78,9 @@ for episode in range(EPISODES):
             q_table[discrete_state+(action,)] = 0
 
         discrete_state = new_discrete_state
+
+        if END_EPSILON_DECAYING >= episode >= START_EPSILON_DECAYING:
+            epsilon -= epsilon_decay_value
 env.close()
 
 discrete_state = get_discrete_state(env.reset())
